@@ -465,6 +465,23 @@
 
             </div>
         </main>
+<audio id="bg-audio" src="./assets/audio.mp3" loop hidden></audio>
+<script>
+  const bgAudio = document.getElementById('bg-audio');
+
+  // Try to play after first user interaction (needed for most browsers)
+  function startBgAudio() {
+    bgAudio.play().catch(() => {
+      // if blocked, you could show a small "Tap to enable sound" later
+      console.warn('Autoplay blocked by browser');
+    });
+    document.removeEventListener('click', startBgAudio);
+    document.removeEventListener('touchstart', startBgAudio);
+  }
+
+  document.addEventListener('click', startBgAudio);
+  document.addEventListener('touchstart', startBgAudio);
+</script>
 
         <script>
         const videoOverlay = document.getElementById('video-overlay');
@@ -607,3 +624,4 @@ window.addEventListener('resize', () => {
         </script>
     </body>
 </html>
+
