@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Letters Index</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Courier+Prime:wght@700&family=Inter:wght@400;600&display=swap"
+            rel="stylesheet">
+        <style>
+        .font-script { font-family: 'Caveat', cursive; }
+        .font-typewriter { font-family: 'Courier Prime', monospace; }
+        
+        /* Initial States for Entry Animations */
+        .reveal-text {
+            opacity: 0;
+            transform: translateY(50px) rotate(10deg);
+            transition: all 1s ease-out;
+            transform-origin: bottom left;
+        }
+        
+        .reveal-subtext {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: all 1s ease-out 0.3s;
+        }
+
+        .reveal-arrow {
+            opacity: 0;
+            transition: opacity 1s ease-out 0.7s;
+        }
+
+        .nav-item {
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Loaded State Classes */
+        body.loaded .reveal-text {
+            opacity: 1;
+            transform: translateY(0) rotate(-3deg);
+        }
+        body.loaded .reveal-subtext {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        body.loaded .reveal-arrow {
+            opacity: 1;
+        }
+
+        /* Envelope Styles */
+        .envelope-container {
+            perspective: 1000px;
+        }
+        .envelope {
+            position: absolute;
+            transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+            top: 50%;
+            left: 50%;
+            transform-origin: center center;
+        }
+
+        /* Responsive envelope sizing */
+        @media (max-width: 640px) {
+            .envelope {
+                margin-top: -80px;
+                margin-left: -100px;
+            }
+        }
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .envelope {
+                margin-top: -96px;
+                margin-left: -128px;
+            }
+        }
+        @media (min-width: 1025px) {
+            .envelope {
+                margin-top: -104px;
+                margin-left: -160px;
+            }
+        }
+    </style>
+    </head>
+    <body class="bg-[#f7f5f0] text-[#cf2e2e] font-sans selection:bg-[#cf2e2e] selection:text-white overflow-hidden relative min-h-screen flex flex-col">
+
+        <!-- Navigation -->
+        <nav class="absolute top-0 w-full p-4 sm:p-6 flex justify-between items-center z-50">
+            <div class="flex space-x-2 items-center opacity-0 nav-item" style="animation-delay: 0.5s;">
+                
+                <span class="font-typewriter font-bold tracking-widest text-xs sm:text-sm uppercase"><span class="text-2xl">💘</span>Postbox</span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow flex flex-col lg:flex-row items-center justify-center w-full px-4 sm:px-8 md:px-12 lg:px-20 relative z-10 gap-8 lg:gap-0">
+
+            <!-- Left Side: Envelope Stack -->
+            <div id="stack-area" class="relative w-full lg:w-1/2 h-64 sm:h-80 md:h-96 lg:h-[500px] flex items-center justify-center cursor-pointer group envelope-container">
+                <!-- Envelopes will be injected here by JS -->
+                <div class="absolute bottom-4 sm:bottom-8 text-gray-400 text-xs tracking-widest opacity-60 pointer-events-none font-typewriter z-0">
+                    CLICK TO SHUFFLE
+                </div>
+            </div>
+
+            <!-- Right Side: Text & Link -->
+            <div class="w-full lg:w-1/2 flex flex-col justify-center items-center text-center z-40">
+                <h1 class="w-full">
+                    <span class="block font-script text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl reveal-text leading-none">
+                        Letters
+                    </span>
+                    <span class="block font-typewriter text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mt-2 sm:mt-3 md:mt-4 reveal-subtext">
+                        for you
+                    </span>
+                </h1>
+
+                <!-- Decorative Arrow - Hidden on small screens -->
+                <div class="hidden sm:block mt-8 md:mt-12 reveal-arrow pointer-events-none">
+                    <svg width="80" height="60" viewBox="0 0 100 80" class="stroke-current fill-none stroke-2 text-[#cf2e2e] w-16 md:w-20 lg:w-24">
+                        <path d="M10,10 Q50,5 60,40 T90,60" stroke-dasharray="5,5" />
+                        <path d="M80,50 L90,62 L80,75" />
+                    </svg>
+                </div>
+
+                <!-- Click Me Button -->
+                <a href="page2.html" class="font-typewriter text-lg sm:text-xl md:text-2xl lg:text-2xl mt-6 sm:mt-8 md:mt-12 hover:text-green-600 transition-colors cursor-pointer font-medium">
+                    click me
+                </a>
+            </div>
+
+        </main>
+
+        <!-- Background Decoration -->
+        <div class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-100 via-transparent to-transparent z-0"></div>
+
+        <script>
+        // --- State ---
+        const state = {
+            activeLetter: 0,
+            isLoaded: false,
+            hovered: false
+        };
+
+        // --- Configuration ---
+        const envelopeColor = "#e62e38";
+        const sealColor = "#d4af37";
+        const baseRotations = [-5, 12, -8];
+        const stackArea = document.getElementById('stack-area');
+        
+        // Responsive envelope sizes
+        function getEnvelopeDimensions() {
+            const width = window.innerWidth;
+            if (width < 640) {
+                return { width: 160, height: 120, className: 'w-40 h-28' };
+            } else if (width < 1024) {
+                return { width: 200, height: 150, className: 'w-52 h-36' };
+            } else {
+                return { width: 240, height: 180, className: 'w-60 h-44' };
+            }
+        }
+        
+        // --- SVG Template for Envelope ---
+        function createEnvelopeSVG() {
+            return `
+                <svg viewBox="0 0 300 200" class="w-full h-full drop-shadow-xl overflow-visible">
+                    <defs>
+                        <filter id="paper-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="2" dy="4" stdDeviation="3" flood-opacity="0.2"/>
+                        </filter>
+                    </defs>
+                    <rect x="0" y="0" width="300" height="200" fill="${envelopeColor}" rx="4" />
+                    <path d="M0,200 L150,110 L300,200" fill="rgba(0,0,0,0.1)" />
+                    <path d="M0,200 L150,115 L300,200" fill="${envelopeColor}" />
+                    <path d="M0,0 L110,100 L0,200" fill="rgba(0,0,0,0.05)" />
+                    <path d="M300,0 L190,100 L300,200" fill="rgba(0,0,0,0.05)" />
+                    <g class="origin-top transition-transform duration-500">
+                        <path d="M0,0 L150,120 L300,0" fill="${envelopeColor}" filter="brightness(0.9)" />
+                        <circle cx="150" cy="120" r="18" fill="${sealColor}" filter="url(#paper-shadow)" />
+                        <circle cx="150" cy="120" r="14" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
+                        <path d="M145,115 L155,125 M155,115 L145,125" stroke="rgba(0,0,0,0.2)" stroke-width="2" />
+                    </g>
+                </svg>
+            `;
+        }
+
+        // --- Initialization ---
+        const envelopeElements = [];
+
+        function createEnvelopes() {
+            const dims = getEnvelopeDimensions();
+            stackArea.innerHTML = `<div class="absolute bottom-4 sm:bottom-8 text-gray-400 text-xs tracking-widest opacity-60 pointer-events-none font-typewriter z-0">CLICK TO SHUFFLE</div>`;
+            envelopeElements.length = 0;
+            
+            for (let i = 0; i < 3; i++) {
+                const el = document.createElement('div');
+                el.className = `envelope ${dims.className}`;
+                el.innerHTML = createEnvelopeSVG();
+                stackArea.appendChild(el);
+                envelopeElements.push(el);
+            }
+        }
+
+        // --- Render Loop ---
+        function updateStack() {
+            envelopeElements.forEach((el, index) => {
+                let position = (index - state.activeLetter + 3) % 3;
+
+                const zIndex = 30 - (position * 10);
+                const scale = 1 - (position * 0.05);
+                const brightness = 1 - (position * 0.05);
+                
+                const currentRotation = state.isLoaded ? baseRotations[index] : 0;
+                
+                const hoverOffsetY = state.hovered ? (position * 40) - 20 : 0;
+                const hoverOffsetX = state.hovered ? (hoverOffsetY * 0.5) : 0;
+                const hoverRotate = state.hovered ? (position * 5) - 5 : 0;
+
+                const entryY = state.isLoaded ? 0 : 100;
+
+                el.style.zIndex = zIndex;
+                el.style.opacity = state.isLoaded ? 1 : 0;
+                el.style.filter = `brightness(${brightness})`;
+                el.style.transform = `
+                    translateY(${entryY + hoverOffsetY}px) 
+                    translateX(${hoverOffsetX}px) 
+                    rotate(${currentRotation + hoverRotate}deg) 
+                    scale(${scale})
+                `;
+            });
+        }
+
+        // --- Event Listeners ---
+        stackArea.addEventListener('mouseenter', () => {
+            state.hovered = true;
+            updateStack();
+        });
+
+        stackArea.addEventListener('mouseleave', () => {
+            state.hovered = false;
+            updateStack();
+        });
+
+        stackArea.addEventListener('click', () => {
+            state.activeLetter = (state.activeLetter + 1) % 3;
+            updateStack();
+        });
+
+        window.addEventListener('load', () => {
+            createEnvelopes();
+            updateStack();
+            setTimeout(() => {
+                state.isLoaded = true;
+                document.body.classList.add('loaded');
+                updateStack();
+            }, 100);
+        });
+
+        // Handle window resize for responsive envelopes
+        window.addEventListener('resize', () => {
+            createEnvelopes();
+            updateStack();
+        });
+
+        </script>
+    </body>
+</html>
+
